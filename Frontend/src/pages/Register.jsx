@@ -8,6 +8,7 @@ function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // FIX 1: password toggle
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -60,7 +61,25 @@ function Register() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
-            <input className={inputCls} name="password" type="password" value={form.password} onChange={handleChange} placeholder="Min. 6 characters" />
+            {/* FIX 1: Password show/hide toggle */}
+            <div className="relative">
+              <input
+                className={inputCls + " pr-12"}
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Min. 6 characters"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors text-lg select-none cursor-pointer bg-transparent border-0"
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

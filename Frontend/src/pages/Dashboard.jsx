@@ -159,10 +159,32 @@ function Dashboard() {
     }
   };
 
+  // FIX 3: Skeleton loader instead of plain text
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-slate-400 text-lg font-medium">Loading dashboard...</p>
+      <div className="flex flex-col gap-6">
+        {/* Skeleton stat cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm animate-pulse">
+              <div className="w-10 h-10 bg-slate-200 rounded-xl mb-3" />
+              <div className="h-3 bg-slate-200 rounded w-2/3 mb-2" />
+              <div className="h-8 bg-slate-200 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+        {/* Skeleton panels */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm animate-pulse">
+              <div className="h-5 bg-slate-200 rounded w-1/3 mb-3" />
+              <div className="h-3 bg-slate-100 rounded w-2/3 mb-6" />
+              {[...Array(3)].map((_, j) => (
+                <div key={j} className="h-10 bg-slate-100 rounded-xl mb-3" />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -311,27 +333,50 @@ function Dashboard() {
                 {tasks.length === 0 && (
                   <tr><td colSpan={isAdmin ? 7 : 6} className="text-slate-400 text-center py-6">No tasks found</td></tr>
                 )}
-                {tasks.map((t) => (
-                  <tr key={t._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-2 font-medium text-slate-800">{t.title}</td>
+                {tasks.map((t) => {
+                  // FIX 4: Overdue row highlighting
+                  const isOverdue = t.status !== "Completed" && new Date(t.dueDate) < new Date();
+                  return (
+                  <tr key={t._id} className={`border-b border-slate-50 transition-colors ${
+                    isOverdue ? "bg-red-50 hover:bg-red-100" : "hover:bg-slate-50"
+                  }`}>
+                    <td className="py-3 px-2 font-medium text-slate-800">
+                      <span>{t.title}</span>
+                      {isOverdue && (
+                        <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 px-1.5 py-0.5 rounded-md">Overdue</span>
+                      )}
+                    </td>
                     <td className="py-3 px-2 text-slate-600">{t.project?.name}</td>
                     <td className="py-3 px-2 text-slate-600">{isAdmin ? t.assignedTo?.name : t.createdBy?.name}</td>
-                    <td className="py-3 px-2 text-slate-500 text-xs">{new Date(t.dueDate).toLocaleDateString()}</td>
+                    <td className={`py-3 px-2 text-xs font-medium ${isOverdue ? "text-red-600" : "text-slate-500"}`}>
+                      {new Date(t.dueDate).toLocaleDateString()}
+                    </td>
                     <td className="py-3 px-2">
                       <span className={`text-xs font-semibold px-2 py-1 rounded-full ${priorityBadge[t.priority] || "bg-slate-100 text-slate-600"}`}>
                         {t.priority}
                       </span>
                     </td>
                     <td className="py-3 px-2">
-                      <select
-                        className="border border-slate-200 bg-white rounded-lg px-2 py-1.5 text-xs outline-none focus:border-blue-500 cursor-pointer"
-                        value={t.status}
-                        onChange={(e) => handleStatusUpdate(t._id, e.target.value)}
-                      >
-                        <option>To Do</option>
-                        <option>In Progress</option>
-                        <option>Completed</option>
-                      </select>
+                      {/* FIX 4: Color-coded status badge + dropdown */}
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                          t.status === "Completed" ? "bg-emerald-500" :
+                          t.status === "In Progress" ? "bg-blue-500" : "bg-slate-400"
+                        }`} />
+                        <select
+                          className={`border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-blue-500 cursor-pointer ${
+                            t.status === "Completed" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
+                            t.status === "In Progress" ? "border-blue-200 bg-blue-50 text-blue-700" :
+                            "border-slate-200 bg-white text-slate-600"
+                          }`}
+                          value={t.status}
+                          onChange={(e) => handleStatusUpdate(t._id, e.target.value)}
+                        >
+                          <option>To Do</option>
+                          <option>In Progress</option>
+                          <option>Completed</option>
+                        </select>
+                      </div>
                     </td>
                     {isAdmin && (
                       <td className="py-3 px-2">
@@ -339,7 +384,8 @@ function Dashboard() {
                       </td>
                     )}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
