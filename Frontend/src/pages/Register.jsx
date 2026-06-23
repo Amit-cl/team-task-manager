@@ -1,26 +1,83 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+
 function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "member" });
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
   const validate = () => {
-    if (!form.name || !form.email || !form.password || !form.role) return "All fields are required";
+    if (!form.name || !form.email || !form.password) return "All fields are required";
     if (form.name.trim().length < 2) return "Name must be at least 2 characters";
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Enter a valid email";
     if (form.password.length < 6) return "Password must be at least 6 characters";
     return "";
   };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); setError("");
-    const message = validate();
-    if (message) return setError(message);
-    try { await register(form); navigate("/"); }
-    catch (err) { setError(err.response?.data?.message || "Registration failed"); }
+    e.preventDefault();
+    setError("");
+    const msg = validate();
+    if (msg) return setError(msg);
+    setLoading(true);
+    try {
+      await register(form);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
-  return <div className="auth-page"><div className="auth-card"><h1>Create Account</h1><p className="muted">Register as Admin or Member</p>{error && <div className="error">{error}</div>}<form onSubmit={handleSubmit}><label>Name</label><input name="name" value={form.name} onChange={handleChange} /><label>Email</label><input name="email" value={form.email} onChange={handleChange} /><label>Password</label><input name="password" type="password" value={form.password} onChange={handleChange} /><label>Role</label><select name="role" value={form.role} onChange={handleChange}><option value="member">Member</option><option value="admin">Admin</option></select><button className="primary-btn">Register</button></form><p className="small-text">Already have account? <Link to="/login">Login</Link></p></div></div>;
+
+  const inputCls = "w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white transition-all";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-xl p-8">
+        <h1 className="text-3xl font-bold text-slate-800">Create Account</h1>
+        <p className="text-slate-500 text-sm mt-1 mb-6">Register to join your team</p>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm font-medium px-4 py-3 rounded-xl mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Name</label>
+            <input className={inputCls} name="name" value={form.name} onChange={handleChange} placeholder="John Doe" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
+            <input className={inputCls} name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@example.com" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+            <input className={inputCls} name="password" type="password" value={form.password} onChange={handleChange} placeholder="Min. 6 characters" />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors cursor-pointer border-0 mt-1"
+          >
+            {loading ? "Creating account..." : "Register"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-slate-500 mt-5">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 font-bold hover:underline">Login</Link>
+        </p>
+      </div>
+    </div>
+  );
 }
+
 export default Register;

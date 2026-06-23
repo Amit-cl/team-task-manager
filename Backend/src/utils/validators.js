@@ -1,4 +1,5 @@
 export const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+
 export const isFutureOrToday = (dateValue) => {
   const inputDate = new Date(dateValue);
   if (Number.isNaN(inputDate.getTime())) return false;
@@ -7,4 +8,9 @@ export const isFutureOrToday = (dateValue) => {
   inputDate.setHours(0, 0, 0, 0);
   return inputDate >= today;
 };
-export const isValidObjectId = (mongoose, id) => mongoose.Types.ObjectId.isValid(id);
+
+/**
+ * Fix: mongoose.Types.ObjectId.isValid() returns true for any 12-byte string.
+ * We enforce the proper 24-character hexadecimal ObjectId format.
+ */
+export const isValidObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id);
